@@ -1,0 +1,164 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Random;
+
+public class TicTacToeGUI extends JFrame implements ActionListener
+
+ {
+    public int size;   
+    public JButton[][] buttons;
+    public boolean userTurn = true;
+    public boolean vsComputer = false;
+    public Random random = new Random();
+    public TicTacToeGUI(int n) {
+        this.size = n;
+        buttons = new JButton[size][size];
+        
+        setTitle("Tic Tac Toe");
+        setSize(500, 550);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(Color.LIGHT_GRAY);
+
+        JPanel boardPanel = new JPanel();
+        boardPanel.setLayout(new GridLayout(size, size));
+        boardPanel.setBackground(Color.DARK_GRAY);
+        
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                buttons[i][j] = new JButton(" ");
+                buttons[i][j].setFont(new Font("LUCAS", Font.BOLD, 100));
+                buttons[i][j].setForeground(Color.PINK);
+                buttons[i][j].setBackground(Color.YELLOW);
+                buttons[i][j].addActionListener(this);
+                boardPanel.add(buttons[i][j]);
+            }
+        }
+        
+        add(boardPanel, BorderLayout.CENTER);
+        
+        JPanel controlPanel = new JPanel();
+        controlPanel.setBackground(Color.PINK);
+        JButton resetButton = new JButton("Reset");
+        resetButton.setForeground(Color.BLACK);
+        resetButton.setBackground(Color.ORANGE);
+        resetButton.addActionListener(e -> resetGame());
+        JButton modeButton = new JButton("Computer Mode");
+        modeButton.setForeground(Color.BLACK);
+        modeButton.setBackground(Color.ORANGE);
+        modeButton.addActionListener(e -> toggleMode());
+        JButton endButton = new JButton("End Game");
+        endButton.setForeground(Color.BLACK);
+        endButton.setBackground(Color.ORANGE);
+        endButton.addActionListener(e -> System.exit(0));
+        
+        controlPanel.add(resetButton);
+        controlPanel.add(modeButton);
+        controlPanel.add(endButton);
+        add(controlPanel, BorderLayout.NORTH);
+        
+        setVisible(true);
+    }
+
+    public void toggleMode() {
+        vsComputer = !vsComputer;
+        resetGame();
+    }
+
+    public void resetGame() {
+        userTurn = true;
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                buttons[i][j].setText(" ");
+                buttons[i][j].setEnabled(true);
+                buttons[i][j].setBackground(Color.YELLOW);
+            }
+        }
+    }
+
+    public boolean checkWin(String player) {
+        for (int i = 0; i < size; i++) {
+            boolean rowWin = true, colWin = true;
+            for (int j = 0; j < size; j++) {
+                if (!buttons[i][j].getText().equals(player)) rowWin = false;
+                if (!buttons[j][i].getText().equals(player)) colWin = false;
+            }
+            if (rowWin || colWin) return true;
+        }
+        
+        boolean diag1Win = true, diag2Win = true;
+        for (int i = 0; i < size; i++) {
+            if (!buttons[i][i].getText().equals(player)) diag1Win = false;
+            if (!buttons[i][size - 1 - i].getText().equals(player)) diag2Win = false;
+        }
+        return diag1Win || diag2Win;
+    }
+
+    public boolean isBoardFull() {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if (buttons[i][j].getText().equals(" ")) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public void computerMove() {
+        int row, col;
+        do {
+            row = random.nextInt(size);
+            col = random.nextInt(size);
+        } while (!buttons[row][col].getText().equals(" "));
+        buttons[row][col].setText("O");
+        buttons[row][col].setEnabled(false);
+        buttons[row][col].setBackground(Color.RED);
+        
+        if (checkWin("O")) {
+            JOptionPane.showMessageDialog(this, "Computer Wins!");
+            resetGame();
+            return;
+        }
+        if (isBoardFull()) {
+            JOptionPane.showMessageDialog(this, "It's a Draw!");
+            resetGame();
+        }
+        userTurn = true;
+    }
+
+    @Override// actionPerformed is overriding the method from actionlistener
+    public void actionPerformed(ActionEvent e)
+    {
+        JButton clickedButton = (JButton) e.getSource();
+        if (!clickedButton.getText().equals(" "))  
+        return;// and allows only unfilled spaces to be filled
+        
+        clickedButton.setText(userTurn ? "X" : "O");
+        clickedButton.setEnabled(false);
+        clickedButton.setBackground(userTurn ? Color.GREEN : Color.RED);
+        
+        if (checkWin(userTurn ? "X" : "O")) {
+            JOptionPane.showMessageDialog(this, (userTurn ? "User" : "Computer") + " Wins!");
+            resetGame();
+            return;
+        }
+        if (isBoardFull()) {
+            JOptionPane.showMessageDialog(this, "It's a Draw!");
+            resetGame();
+            return;
+        }
+        
+        userTurn = !userTurn;
+        if (vsComputer && !userTurn) {
+            computerMove();                  
+        }
+    }
+
+    public static void main(String[] args) {
+        int n = Integer.parseInt(JOptionPane.showInputDialog("Enter board size (n):"));
+        new TicTacToeGUI(n);
+    }
+}
